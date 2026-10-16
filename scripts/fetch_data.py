@@ -7,7 +7,7 @@ from zoneinfo import ZoneInfo
 TZ = ZoneInfo("Europe/London")
 UA = {"User-Agent": "Mozilla/5.0 tv-dashboard"}
 # Fallback module names, used when an event has no description. The feed's own description is preferred.
-NAMES = {"CSC8202": "Information Security and Trust", "CSC8204": "High Integrity Software Development",
+NAMES = {"CSC8202": "Information Security and Cryptography", "CSC8204": "High Integrity Software Development",
          "CSC8207": "Security Analysis of Complex Systems",
          "CSC8208": "Research Methods and Group Project in Security and Resilience",
          "CSC8209": "Project and Dissertation in Computer Security and Resilience",
