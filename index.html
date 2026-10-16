@@ -17,6 +17,9 @@ body{margin:0;width:100vw;height:100vh;overflow:hidden;background:#0a1620;color:
 #dim{position:fixed;left:0;top:0;width:100%;height:100%;background:rgba(5,12,20,.55)}
 #ui{position:fixed;left:9.5rem;right:9.5rem;top:3rem;bottom:2rem}
 #top{display:flex;justify-content:space-between;height:15.6rem}
+#wx{position:relative}
+#wx:before,#events-title{font-size:1rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.6);font-weight:500}
+#wx:before{content:"Weather";position:absolute;top:-2.2rem;left:1.8rem}
 #hm{font-size:8rem;font-weight:200;line-height:1}
 #ss{font-size:3.4rem;font-weight:200;vertical-align:top;position:relative;top:.3rem;margin-left:.4rem}
 #date{font-size:1.9rem;margin-top:.8rem}
@@ -37,18 +40,32 @@ body{margin:0;width:100vw;height:100vh;overflow:hidden;background:#0a1620;color:
 #fc span{color:rgba(255,255,255,.6);margin-left:.5rem}
 #fc u{display:block;text-decoration:none;font-size:1rem;color:#7cc4ff;margin-top:.2rem}
 #fc u svg{display:inline-block;width:1rem;height:1rem;margin:0 .2rem 0 0;vertical-align:-.15rem}
-#ev{display:flex;margin-top:3rem}
+#snapshot{display:flex;gap:1.2rem;margin-top:clamp(3rem,5vh,5rem);margin-bottom:1.8rem}
+.snapshot-card{flex:1;min-width:0;padding:.9rem 1.2rem;border: .1rem solid rgba(255,255,255,.12);border-radius:1.1rem;background:rgba(255,255,255,.1)}
+.snapshot-label{display:block;margin-bottom:.3rem;font-size:1rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.6);font-weight:500}
+.snapshot-value{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:1.45rem;font-weight:400}
+.snapshot-detail{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:.25rem;color:rgba(255,255,255,.65);font-size:1rem}
+#events-title{margin-bottom:.8rem}
+#ev{display:flex}
 .col{flex:1;margin-right:1.2rem}
 .col:last-child{margin-right:0}
-.col h3{margin:0 0 .3rem;font-size:1.9rem;font-weight:300}
+.col h3{margin:0 0 .5rem;font-size:1.9rem;font-weight:300}
+.col:first-child h3{color:#fff}
+.col:not(:first-child){opacity:.86}
 .col h3 span{font-size:1.1rem;margin-left:.4rem;font-weight:400}
-.card{position:relative;border-radius:1.1rem;background:rgba(255,255,255,.12);border:.1rem solid rgba(255,255,255,.08);padding:.6rem .9rem .6rem 1.7rem;margin-bottom:.6rem;font-size:1.1rem;font-weight:500;line-height:1.3}
+.card{position:relative;border-radius:1.1rem;background:rgba(255,255,255,.12);border:.1rem solid rgba(255,255,255,.08);padding:.7rem .9rem .7rem 1.7rem;margin-bottom:.7rem;font-size:1.1rem;font-weight:500;line-height:1.3}
 .card small{display:block;font-size:1rem;font-weight:500}
 .card:before{content:"";position:absolute;left:.7rem;top:.7rem;bottom:.7rem;width:.25rem;border-radius:.2rem;background:#fff}
 .msg{margin:0;font-size:1.2rem;color:rgba(255,255,255,.6)}
 .card em{display:block;font-style:normal;font-weight:400;color:rgba(255,255,255,.6);font-size:1rem}
 .card small{color:var(--k,#fff);white-space:pre}
-.card b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-weight:500;font-size:1.2rem;line-height:1.25;margin:.1rem 0 .15rem}
+.card b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-weight:500;font-size:1.3rem;line-height:1.25;margin:.2rem 0 .2rem}
+.event-kind{display:inline-block;margin-left:.3rem;padding:.1rem .4rem;border-radius:.5rem;background:rgba(255,255,255,.12);font-size:.9rem;font-weight:400;color:rgba(255,255,255,.75)}
+.event-kind:before{margin-right:.25rem}
+.event-kind.lecture:before{content:"▣"}
+.event-kind.seminar:before{content:"◈"}
+.event-kind.practical:before{content:"◆"}
+.event-kind.online:before{content:"↗"}
 .card:before{background:var(--k,#fff)}
 .card.now{background:rgba(255,255,255,.22);border-color:rgba(255,255,255,.3)}
 .card.done{opacity:.45}
@@ -70,6 +87,11 @@ body.night #ui{opacity:.65}
     <div><div><span id="hm"></span><span id="ss"></span></div><div id="date"></div></div>
     <div id="wx"><div id="w1"><div><span id="cur"></span><span id="ico"></span></div><div id="wr"><b id="cond"></b><span id="hr"></span></div></div><div id="sub"></div><div id="fc"></div></div>
   </div>
+  <div id="snapshot">
+    <div class="snapshot-card"><span class="snapshot-label">Right now</span><span class="snapshot-value" id="now-value">Loading events...</span><span class="snapshot-detail" id="now-detail"></span></div>
+    <div class="snapshot-card"><span class="snapshot-label">Weather suggestion</span><span class="snapshot-value" id="weather-tip">Checking the skies...</span><span class="snapshot-detail" id="weather-detail"></span></div>
+  </div>
+  <div id="events-title">Upcoming events</div>
   <div id="ev"></div>
 </div>
 <script>
@@ -170,6 +192,17 @@ function weather() {
       }
     }
     $('hr').textContent = from;
+    var nextRain = 0, rainStart = 0;
+    while (rainStart < w.hourly.time.length && w.hourly.time[rainStart].slice(0, 13) < nowIso.slice(0, 13)) rainStart++;
+    for (var r = rainStart; r < Math.min(rainStart + 4, w.hourly.time.length); r++)
+      nextRain = Math.max(nextRain, w.hourly.precipitation_probability[r] || 0);
+    var temp = Math.round(c.temperature_2m), wind = Math.round(c.wind_speed_10m);
+    var wet = c.weather_code >= 51 || nextRain >= 60;
+    var possibleRain = nextRain >= 35;
+    $('weather-tip').textContent = wet ? 'Take a raincoat' : possibleRain ? 'Keep a raincoat nearby' :
+      temp >= 24 ? 'Warm day ahead' : temp <= 5 ? 'Wrap up warm' : wind >= 30 ? 'Breezy outside' : 'Comfortable outside';
+    $('weather-detail').textContent = wet ? 'Showers are likely soon.' : possibleRain ? 'A shower is possible later.' :
+      temp >= 24 ? 'Stay hydrated and seek shade.' : temp <= 5 ? 'It is cold out there.' : wind >= 30 ? 'Hold onto your hat.' : 'No raincoat needed right now.';
   });
 }
 
@@ -181,15 +214,26 @@ var KC = { lecture: '#7cc4ff', seminar: '#c4a7ff', practical: '#6ee7b7' };   // 
 function mins(ms) { var m = Math.max(1, Math.round(ms / 6e4)); return m < 60 ? m + ' min' : Math.floor(m / 60) + 'h ' + (m % 60) + 'm'; }
 function render() {
   if (!have) return;
-  var now = Date.now(), today = fKey.format(new Date()), tomorrow = dayAfter(today), cols = {}, keys = [], next = null;
+  var now = Date.now(), today = fKey.format(new Date()), tomorrow = dayAfter(today), cols = {}, keys = [], next = null, current = null;
   EV.forEach(function (e) {
     if (e.e <= now) return;   // finished events are removed
+    if (e.s <= now && now < e.e) current = e;
     if (!next && e.s > now) next = e;
     var k = fKey.format(new Date(e.s));
     if (k < today) return;
     if (!cols[k]) { cols[k] = []; keys.push(k); }
     cols[k].push(e);
   });
+  if (current) {
+    $('now-value').textContent = 'Happening now';
+    $('now-detail').textContent = current.n || current.t;
+  } else if (next) {
+    $('now-value').textContent = 'Next at ' + fTime.format(new Date(next.s));
+    $('now-detail').textContent = (next.n || next.t) + (next.l ? ' · ' + next.l : '');
+  } else {
+    $('now-value').textContent = 'No more events today';
+    $('now-detail').textContent = 'Enjoy the quiet time.';
+  }
   keys.sort();
   var h = '';
   keys.slice(0, C.days).forEach(function (k) {
@@ -199,8 +243,9 @@ function render() {
       var live = e.s <= now && now < e.e;
       var kind = e.k === 'other' && !e.l ? 'Online' : e.k ? e.k.charAt(0).toUpperCase() + e.k.slice(1) : '';
       var tag = live ? 'Now' : (e === next && e.s - now < 108e5) ? 'Next, in ' + mins(e.s - now) : kind;
+      var kindClass = e.k === 'other' && !e.l ? 'online' : e.k || '';
       h += '<div class="card' + (live ? ' now' : '') + '" style="--k:' + (KC[e.k] || '#ffd479') + '"><small>' +
-        (e.a ? 'All day' : fTime.format(new Date(e.s))) + (tag ? '  \u00B7  ' + tag : '') + '</small><b>' + esc(e.n || e.t) + '</b>' +
+        (e.a ? 'All day' : fTime.format(new Date(e.s))) + (tag ? '  \u00B7  ' + tag : '') + (kind ? '<span class="event-kind ' + kindClass + '">' + esc(kind) + '</span>' : '') + '</small><b>' + esc(e.n || e.t) + '</b>' +
         (e.c || e.l ? '<em>' + esc([e.c, e.l].filter(Boolean).join('  \u00B7  ')) + '</em>' : '') +
         (live ? '<span class="bar"><i style="width:' + Math.round((now - e.s) / (e.e - e.s) * 100) + '%"></i></span>' : '') + '</div>';
     });
