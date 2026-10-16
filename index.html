@@ -89,7 +89,7 @@ body.night #ui{opacity:.65}
 <script>
 var C = {
   video: 'vYIYIVmOo3Q',              // YouTube live stream id
-  background: 'photos',               // choose 'video' or 'photos'
+  background: 'video',               // choose 'video' or 'photos'
   audio: true,                       // set true to allow background video audio (browser autoplay rules still apply)
   lat: 54.9783, lon: -1.6178,        // weather location (Newcastle upon Tyne)
   tz: 'Europe/London',               // fixed, so the TV's own timezone setting doesn't matter
@@ -97,7 +97,7 @@ var C = {
   night: [23, 8],                    // dim the screen between these hours (24h clock)
   rain: true,                        // show today's chance of rain
   branch: 'main',                    // repo branch that holds data/*.json
-  perDay: 3                          // max events shown per day
+  perDay: 5                          // max events shown per day
 };
 var $ = function (id) { return document.getElementById(id); };
 function fmt(o) { return new Intl.DateTimeFormat('en-US', Object.assign({ timeZone: C.tz }, o)); }
