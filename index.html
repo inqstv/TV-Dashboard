@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TV Dashboard</title>
+<style>
+/* 1rem = 10px at 960x540; everything scales from viewport width, so 720p to 4K look identical */
+html{font-size:calc(100vw/96)}
+body{margin:0;width:100vw;height:100vh;overflow:hidden;background:#0a1620;color:#fff;font-family:Roboto,"Helvetica Neue",Arial,sans-serif;cursor:none}
+#bg,.ph{position:fixed;left:0;top:0;width:100%;height:100%;border:0;pointer-events:none}
+.ph{background-size:cover;background-position:center;opacity:0;transition:opacity 3s}
+.ph.on{opacity:1}
+#dim{position:fixed;left:0;top:0;width:100%;height:100%;background:rgba(5,12,20,.55)}
+#ui{position:fixed;left:9.5rem;right:9.5rem;top:8rem;bottom:3rem}
+#top{display:flex;justify-content:space-between;height:13.3rem;border-bottom:.1rem solid rgba(255,255,255,.3)}
+#hm{font-size:7rem;font-weight:200;line-height:1}
+#ss{font-size:3rem;font-weight:200;vertical-align:top;position:relative;top:.3rem;margin-left:.4rem}
+#date{font-size:1.7rem;margin-top:.8rem}
+#wx{width:22rem;text-align:right}
+#cur{font-size:3.5rem;font-weight:200;line-height:1}
+#ico{font-size:3rem;margin-left:.8rem}
+#fc{display:flex;justify-content:space-between;margin-top:1rem}
+#fc div{text-align:center;font-size:1.1rem}
+#fc b{display:block;background:rgba(255,255,255,.22);border-radius:1rem;padding:.2rem .7rem;font-size:1rem;font-weight:400;margin-bottom:.3rem}
+#fc i{display:block;font-style:normal;font-size:2rem;line-height:1.2}
+#ev{display:flex;margin-top:1.9rem}
+.col{flex:1;margin-right:1rem}
+.col:last-child{margin-right:0}
+.col h3{margin:0 0 .3rem;font-size:1.9rem;font-weight:300}
+.col h3 span{font-size:1.1rem;margin-left:.4rem;font-weight:400}
+.card{border-left:.25rem solid #fff;background:rgba(255,255,255,.14);padding:.4rem .8rem;margin-bottom:.4rem;font-size:1.1rem;font-weight:500;line-height:1.3}
+.card small{display:block;font-size:1rem;font-weight:500}
+.card em{display:block;font-style:normal;font-weight:400;color:rgba(255,255,255,.6);font-size:1rem}
+</style>
+</head>
+<body>
+<div id="bg"></div>
+<div class="ph" id="p0"></div><div class="ph" id="p1"></div>
+<div id="dim"></div>
+<div id="ui">
+  <div id="top">
+    <div><div><span id="hm"></span><span id="ss"></span></div><div id="date"></div></div>
+    <div id="wx"><div><span id="cur"></span><span id="ico"></span></div><div id="fc"></div></div>
+  </div>
+  <div id="ev"></div>
+</div>
+<script>
+var C = {
+  video: 'vYIYIVmOo3Q',              // YouTube live stream id
+  lat: 54.9783, lon: -1.6178,        // weather location (Newcastle upon Tyne)
+  tz: 'Europe/London',               // fixed, so the TV's own timezone setting doesn't matter
+  days: 4,                           // calendar columns (days that have events)
+  perDay: 4                          // max events shown per day
+};
+var $ = function (id) { return document.getElementById(id); };
+function fmt(o) { return new Intl.DateTimeFormat('en-US', Object.assign({ timeZone: C.tz }, o)); }
+var fClock = fmt({ hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });
+var fDate = fmt({ weekday: 'long', month: 'long', day: 'numeric' });
+var fTime = fmt({ hour: 'numeric', minute: '2-digit', hour12: true });
+var fWd = fmt({ weekday: 'long' });
+var fWds = fmt({ weekday: 'short' });
+var fKey = new Intl.DateTimeFormat('en-CA', { timeZone: C.tz, year: 'numeric', month: '2-digit', day: '2-digit' });
+var lastMin = '';
+
+function tick() {
+  var d = new Date(), p = {};
+  fClock.formatToParts(d).forEach(function (x) { p[x.type] = x.value; });
+  var hm = p.hour + ':' + p.minute;
+  if (hm !== lastMin) { lastMin = hm; $('hm').textContent = hm; $('date').textContent = fDate.format(d); }
+  $('ss').textContent = p.second;
+}
+setInterval(tick, 1000); tick();
+
+function getJSON(url, cb) {
+  fetch(url).then(function (r) { if (!r.ok) throw 0; return r.json(); }).then(cb).catch(function () {});
+}
+
+/* Weather (Open-Meteo: free, no key) */
+var ICON = function (c) {
+  if (c === 0) return '\u2600'; if (c < 3) return '\u26C5'; if (c === 3 || c === 45 || c === 48) return '\u2601';
+  if (c >= 71 && c <= 77 || c === 85 || c === 86) return '\u2744'; if (c >= 95) return '\u26A1'; return '\u2614';
+};
+function weather() {
+  getJSON('https://api.open-meteo.com/v1/forecast?latitude=' + C.lat + '&longitude=' + C.lon +
+    '&current=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min' +
+    '&timezone=' + encodeURIComponent(C.tz) + '&forecast_days=4', function (w) {
+    $('cur').textContent = Math.round(w.current.temperature_2m) + '\u00B0';
+    $('ico').textContent = ICON(w.current.weather_code);
+    var h = '';
+    for (var i = 0; i < w.daily.time.length; i++) {
+      var dt = new Date(w.daily.time[i] + 'T12:00:00Z');
+      h += '<div><b>' + (i ? fWds.format(dt).toUpperCase() : 'TODAY') + '</b><i>' + ICON(w.daily.weather_code[i]) + '</i>' +
+        Math.round(w.daily.temperature_2m_max[i]) + '&nbsp;&nbsp;' + Math.round(w.daily.temperature_2m_min[i]) + '</div>';
+    }
+    $('fc').innerHTML = h;
+  });
+}
+
+/* Calendar (data/events.json is written by the GitHub Action) */
+function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+function dayAfter(key) { return fKey.format(new Date(new Date(key + 'T12:00:00Z').getTime() + 864e5)); }
+function calendar() {
+  getJSON('data/events.json?' + Date.now(), function (list) {
+    var now = Date.now(), today = fKey.format(new Date()), tomorrow = dayAfter(today), cols = {}, keys = [];
+    list.forEach(function (e) {
+      if (e.e < now) return;
+      var k = fKey.format(new Date(e.s));
+      if (!cols[k]) { cols[k] = []; keys.push(k); }
+      cols[k].push(e);
+    });
+    keys.sort();
+    var h = '';
+    keys.slice(0, C.days).forEach(function (k) {
+      var d = new Date(k + 'T12:00:00Z'), name = k === today ? 'Today' : k === tomorrow ? 'Tomorrow' : fWd.format(d);
+      h += '<div class="col"><h3>' + Number(k.slice(8)) + '<span>' + name + '</span></h3>';
+      cols[k].slice(0, C.perDay).forEach(function (e) {
+        var t = e.a ? 'All day' : fTime.format(new Date(e.s));
+        h += '<div class="card"><small>' + t + '</small>' + esc(e.t) + (e.l ? '<em>at ' + esc(e.l) + '</em>' : '') + '</div>';
+      });
+      h += '</div>';
+    });
+    $('ev').innerHTML = h;
+  });
+}
+
+/* Background: YouTube live, falling back to iCloud photos (data/photos.json), then plain colour */
+var photos = [], pi = 0, slide = 0, slideTimer = null, fallback = false;
+function showPhoto() {
+  if (!photos.length) return;
+  var next = $('p' + (slide ^ 1));
+  next.style.backgroundImage = 'url(' + photos[pi++ % photos.length] + ')';
+  next.className = 'ph on'; $('p' + slide).className = 'ph'; slide ^= 1;
+}
+function useFallback() {
+  if (fallback) return; fallback = true;
+  var f = $('bg'); if (f && f.parentNode) f.parentNode.removeChild(f);
+  getJSON('data/photos.json?' + Date.now(), function (j) {
+    photos = (j.urls || []).sort(function () { return Math.random() - .5; });
+    showPhoto(); slideTimer = setInterval(showPhoto, 60000);
+  });
+}
+var player;
+function onYouTubeIframeAPIReady() {
+  player = new YT.Player('bg', {
+    videoId: C.video, width: '100%', height: '100%',
+    playerVars: { autoplay: 1, mute: 1, controls: 0, rel: 0, modestbranding: 1, playsinline: 1, iv_load_policy: 3, disablekb: 1, vq: 'hd720' },
+    events: {
+      onReady: function (e) { e.target.mute(); e.target.playVideo(); },
+      onError: useFallback
+    }
+  });
+  var bad = 0;   // watchdog: nudge a stalled player, give up after ~3 minutes
+  setInterval(function () {
+    if (fallback || !player.getPlayerState) return;
+    var s = player.getPlayerState();
+    if (s === 1 || s === 3) { bad = 0; return; }
+    player.playVideo();
+    if (++bad >= 6) useFallback();
+  }, 30000);
+}
+var s = document.createElement('script'); s.src = 'https://www.youtube.com/iframe_api';
+s.onerror = useFallback; document.head.appendChild(s);
+
+weather(); calendar();
+setInterval(weather, 30 * 60000);
+setInterval(calendar, 10 * 60000);
+setTimeout(function () { location.reload(); }, 6 * 3600000);   // self-heal: reload every 6 hours
+</script>
+</body>
+</html>
