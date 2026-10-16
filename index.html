@@ -8,7 +8,8 @@
 /* 1rem = 10px at 960x540; everything scales from viewport width, so 720p to 4K look identical */
 html{font-size:calc(100vw/96)}
 body{margin:0;width:100vw;height:100vh;overflow:hidden;background:#0a1620;color:#fff;font-family:Roboto,"Helvetica Neue",Arial,sans-serif;cursor:none}
-#bg,.ph{position:fixed;left:0;top:0;width:100%;height:100%;border:0;pointer-events:none}
+.ph{position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none}
+#bg{position:fixed;left:50%;top:50%;width:177.78vh;min-width:100vw;height:56.25vw;min-height:100vh;transform:translate(-50%,-50%);border:0;pointer-events:none}
 .ph{background-size:cover;background-position:center;opacity:0;transition:opacity 3s}
 .ph.on{opacity:1}
 #dim{position:fixed;left:0;top:0;width:100%;height:100%;background:rgba(5,12,20,.55)}
@@ -31,6 +32,7 @@ body{margin:0;width:100vw;height:100vh;overflow:hidden;background:#0a1620;color:
 .col h3 span{font-size:1.1rem;margin-left:.4rem;font-weight:400}
 .card{border-left:.25rem solid #fff;background:rgba(255,255,255,.14);padding:.4rem .8rem;margin-bottom:.4rem;font-size:1.1rem;font-weight:500;line-height:1.3}
 .card small{display:block;font-size:1rem;font-weight:500}
+.msg{margin:0;font-size:1.2rem;color:rgba(255,255,255,.6)}
 .card em{display:block;font-style:normal;font-weight:400;color:rgba(255,255,255,.6);font-size:1rem}
 </style>
 </head>
@@ -51,6 +53,7 @@ var C = {
   lat: 54.9783, lon: -1.6178,        // weather location (Newcastle upon Tyne)
   tz: 'Europe/London',               // fixed, so the TV's own timezone setting doesn't matter
   days: 4,                           // calendar columns (days that have events)
+  branch: 'main',                    // repo branch that holds data/*.json
   perDay: 4                          // max events shown per day
 };
 var $ = function (id) { return document.getElementById(id); };
@@ -74,6 +77,16 @@ setInterval(tick, 1000); tick();
 
 function getJSON(url, cb) {
   fetch(url).then(function (r) { if (!r.ok) throw 0; return r.json(); }).then(cb).catch(function () {});
+}
+
+var RAW = /\.github\.io$/.test(location.hostname) ?
+  'https://raw.githubusercontent.com/' + location.hostname.split('.')[0] + '/' + (location.pathname.split('/')[1] || location.hostname) + '/' + C.branch + '/data/' : null;
+function getData(name, ok, fail) {
+  var urls = (RAW ? [RAW + name] : []).concat(['data/' + name]), i = 0;
+  (function next() {
+    if (i >= urls.length) { if (fail) fail(); return; }
+    fetch(urls[i++] + '?' + Date.now()).then(function (r) { if (!r.ok) throw 0; return r.json(); }).then(ok).catch(next);
+  })();
 }
 
 /* Weather (Open-Meteo: free, no key) */
@@ -100,8 +113,9 @@ function weather() {
 /* Calendar (data/events.json is written by the GitHub Action) */
 function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 function dayAfter(key) { return fKey.format(new Date(new Date(key + 'T12:00:00Z').getTime() + 864e5)); }
+var have = false;
 function calendar() {
-  getJSON('data/events.json?' + Date.now(), function (list) {
+  getData('events.json', function (list) {
     var now = Date.now(), today = fKey.format(new Date()), tomorrow = dayAfter(today), cols = {}, keys = [];
     list.forEach(function (e) {
       if (e.e < now) return;
@@ -120,7 +134,10 @@ function calendar() {
       });
       h += '</div>';
     });
-    $('ev').innerHTML = h;
+    have = true;
+    $('ev').innerHTML = h || '<p class="msg">No upcoming events</p>';
+  }, function () {
+    if (!have) $('ev').innerHTML = '<p class="msg">Calendar data not found. Run the "Update dashboard data" workflow once.</p>';
   });
 }
 
@@ -135,7 +152,7 @@ function showPhoto() {
 function useFallback() {
   if (fallback) return; fallback = true;
   var f = $('bg'); if (f && f.parentNode) f.parentNode.removeChild(f);
-  getJSON('data/photos.json?' + Date.now(), function (j) {
+  getData('photos.json', function (j) {
     photos = (j.urls || []).sort(function () { return Math.random() - .5; });
     showPhoto(); slideTimer = setInterval(showPhoto, 60000);
   });

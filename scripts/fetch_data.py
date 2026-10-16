@@ -15,16 +15,20 @@ def events():
     now = dt.datetime.now(TZ)
     out = []
     for ev in recurring_ical_events.of(cal).between(now - dt.timedelta(days=1), now + dt.timedelta(days=21)):
-        s, e = ev["DTSTART"].dt, ev.get("DTEND", ev["DTSTART"]).dt
-        allday = not isinstance(s, dt.datetime)
-        if allday:
-            s, e = dt.datetime.combine(s, dt.time(), TZ), dt.datetime.combine(e, dt.time(), TZ)
-        else:
-            s, e = (x if x.tzinfo else x.replace(tzinfo=TZ) for x in (s, e))
-        out.append({"s": int(s.timestamp() * 1000), "e": int(e.timestamp() * 1000), "a": allday,
-                    "t": str(ev.get("SUMMARY", "")), "l": str(ev.get("LOCATION", ""))})
+        try:
+            s, e = ev["DTSTART"].dt, ev.get("DTEND", ev["DTSTART"]).dt
+            allday = not isinstance(s, dt.datetime)
+            if allday:
+                s, e = dt.datetime.combine(s, dt.time(), TZ), dt.datetime.combine(e, dt.time(), TZ)
+            else:
+                s, e = (x if x.tzinfo else x.replace(tzinfo=TZ) for x in (s, e))
+            out.append({"s": int(s.timestamp() * 1000), "e": int(e.timestamp() * 1000), "a": allday,
+                        "t": str(ev.get("SUMMARY", "")), "l": str(ev.get("LOCATION", ""))})
+        except Exception as exc:
+            print("skipped one event:", exc)
     out.sort(key=lambda x: x["s"])
     json.dump(out, open("data/events.json", "w"), separators=(",", ":"))
+    print(f"{len(out)} events written")
 
 
 B62 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
