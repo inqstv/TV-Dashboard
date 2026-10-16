@@ -56,8 +56,8 @@ body{margin:0;width:100vw;height:100vh;overflow:hidden;background:#0a1620;color:
 .card em{display:block;font-style:normal;font-weight:400;color:rgba(255,255,255,.6);font-size:1rem}
 .card small{color:var(--k,#fff);white-space:pre}
 .card b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-weight:500;font-size:1.3rem;line-height:1.25;margin:.2rem 0 .2rem}
-.event-kind{display:inline-block;margin-left:.3rem;padding:.1rem .4rem;border-radius:.5rem;background:rgba(255,255,255,.12);font-size:.9rem;font-weight:400;color:rgba(255,255,255,.75)}
-.event-kind:before{margin-right:.25rem}
+.event-kind{display:inline-block;width:1.3rem;height:1.3rem;margin-left:.4rem;border-radius:.5rem;background:rgba(255,255,255,.12);font-size:.9rem;font-weight:400;color:rgba(255,255,255,.75);text-align:center;line-height:1.3rem;vertical-align:-.2rem}
+.event-kind:before{margin:0}
 .event-kind.lecture:before{content:"▣"}
 .event-kind.seminar:before{content:"◈"}
 .event-kind.practical:before{content:"◆"}
@@ -89,7 +89,8 @@ body.night #ui{opacity:.65}
 <script>
 var C = {
   video: 'vYIYIVmOo3Q',              // YouTube live stream id
-  audio: true,                      // set true to allow background video audio (browser autoplay rules still apply)
+  background: 'photos',               // choose 'video' or 'photos'
+  audio: true,                       // set true to allow background video audio (browser autoplay rules still apply)
   lat: 54.9783, lon: -1.6178,        // weather location (Newcastle upon Tyne)
   tz: 'Europe/London',               // fixed, so the TV's own timezone setting doesn't matter
   days: 4,                           // calendar columns (days that have events)
@@ -225,10 +226,10 @@ function render() {
     L.slice(0, C.perDay).forEach(function (e) {
       var live = e.s <= now && now < e.e;
       var kind = e.k === 'other' && !e.l ? 'Online' : e.k ? e.k.charAt(0).toUpperCase() + e.k.slice(1) : '';
-      var tag = live ? 'Now' : (e === next && e.s - now < 108e5) ? 'Next, in ' + mins(e.s - now) : kind;
+      var tag = live ? 'Now' : (e === next && e.s - now < 108e5) ? 'Next, in ' + mins(e.s - now) : '';
       var kindClass = e.k === 'other' && !e.l ? 'online' : e.k || '';
       h += '<div class="card' + (live ? ' now' : '') + '" style="--k:' + (KC[e.k] || '#ffd479') + '"><small>' +
-        (e.a ? 'All day' : fTime.format(new Date(e.s))) + (tag ? '  \u00B7  ' + tag : '') + (kind ? '<span class="event-kind ' + kindClass + '">' + esc(kind) + '</span>' : '') + '</small><b>' + esc(e.n || e.t) + '</b>' +
+        (e.a ? 'All day' : fTime.format(new Date(e.s))) + (tag ? '  \u00B7  ' + tag : '') + (kind ? '<span class="event-kind ' + kindClass + '" title="' + esc(kind) + '" aria-label="' + esc(kind) + '"></span>' : '') + '</small><b>' + esc(e.n || e.t) + '</b>' +
         (e.c || e.l ? '<em>' + esc([e.c, e.l].filter(Boolean).join('  \u00B7  ')) + '</em>' : '') +
         (live ? '<span class="bar"><i style="width:' + Math.round((now - e.s) / (e.e - e.s) * 100) + '%"></i></span>' : '') + '</div>';
     });
@@ -243,7 +244,7 @@ function calendar() {
   });
 }
 
-/* Background: YouTube live, falling back to iCloud photos (data/photos.json), then plain colour */
+/* Background: YouTube live or iCloud photos (data/photos.json), then plain colour */
 var photos = [], pi = 0, slide = 0, slideTimer = null, fallback = false;
 function showPhoto() {
   if (!photos.length) return;
@@ -286,8 +287,12 @@ function onYouTubeIframeAPIReady() {
     if (++bad >= 6) useFallback();
   }, 30000);
 }
-var s = document.createElement('script'); s.src = 'https://www.youtube.com/iframe_api';
-s.onerror = useFallback; document.head.appendChild(s);
+if (C.background === 'photos') {
+  useFallback();
+} else {
+  var s = document.createElement('script'); s.src = 'https://www.youtube.com/iframe_api';
+  s.onerror = useFallback; document.head.appendChild(s);
+}
 
 weather(); calendar();
 setInterval(weather, 30 * 60000);
