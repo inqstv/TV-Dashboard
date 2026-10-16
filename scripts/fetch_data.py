@@ -35,7 +35,7 @@ def events():
             title = str(ev.get("SUMMARY", ""))
             code = title.split("/")[0].strip()
             lines = [x.strip() for x in str(ev.get("DESCRIPTION", "")).splitlines() if x.strip()]
-            name = (lines[0] if lines else NAMES.get(code, "")).replace("Postgaduates", "Postgraduates")
+            name = (NAMES.get(code) or (lines[0] if lines else "")).replace("Postgaduates", "Postgraduates")
             out.append({"s": int(s.timestamp() * 1000), "e": int(e.timestamp() * 1000), "a": allday,
                         "t": title, "l": str(ev.get("LOCATION", "")), "n": name,
                         "k": lines[1].lower() if len(lines) > 1 else "",
