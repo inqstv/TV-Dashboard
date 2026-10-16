@@ -1,6 +1,7 @@
 """Runs inside GitHub Actions. Writes data/events.json (always) and data/photos.json (every ~4h).
 Secrets come from environment variables, never from the repo: CAL_URL (required), ALBUM_URL (optional)."""
 import datetime as dt, json, os, re, time, urllib.request, urllib.error
+from urllib.parse import urlparse
 from zoneinfo import ZoneInfo
 
 TZ = ZoneInfo("Europe/London")
@@ -75,7 +76,11 @@ def photos():
             return
     except Exception:
         pass
-    tok = os.environ["ALBUM_URL"].rstrip("/").split("/")[-1].split("#")[-1]
+    album_url = os.environ["ALBUM_URL"].strip()
+    parsed = urlparse(album_url)
+    tok = parsed.path.rstrip("/").split("/")[-1]
+    if not tok or parsed.netloc not in {"photos.icloud.com", "www.icloud.com"}:
+        raise ValueError("ALBUM_URL must be an Apple Photos shared album URL")
     host = f"p{b62(tok[1]) if tok[0] == 'A' else b62(tok[1:3]):02d}-sharedstreams.icloud.com"
     stream = post(host, tok, "webstream", {"streamCtag": None})
     host = stream.get("X-Apple-MMe-Host", host)
@@ -99,4 +104,4 @@ if os.environ.get("ALBUM_URL"):
     try:
         photos()
     except Exception as exc:  # photos are only a fallback, so never fail the calendar update
-        print("photos skipped:", exc)
+        print(f"photos skipped ({type(exc).__name__}): {exc}")
