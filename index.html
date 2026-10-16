@@ -4,36 +4,55 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>TV Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500&display=swap">
 <style>
 /* 1rem = 10px at 960x540; everything scales from viewport width, so 720p to 4K look identical */
 html{font-size:calc(100vw/96)}
-body{margin:0;width:100vw;height:100vh;overflow:hidden;background:#0a1620;color:#fff;font-family:Roboto,"Helvetica Neue",Arial,sans-serif;cursor:none}
+body{margin:0;width:100vw;height:100vh;overflow:hidden;background:#0a1620;color:#fff;font-family:Inter,Roboto,"Helvetica Neue",Arial,sans-serif;cursor:none}
 .ph{position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none}
 #bg{position:fixed;left:50%;top:50%;width:177.78vh;min-width:100vw;height:56.25vw;min-height:100vh;transform:translate(-50%,-50%);border:0;pointer-events:none}
 .ph{background-size:cover;background-position:center;opacity:0;transition:opacity 3s}
 .ph.on{opacity:1}
 #dim{position:fixed;left:0;top:0;width:100%;height:100%;background:rgba(5,12,20,.55)}
 #ui{position:fixed;left:9.5rem;right:9.5rem;top:8rem;bottom:3rem}
-#top{display:flex;justify-content:space-between;height:13.3rem;border-bottom:.1rem solid rgba(255,255,255,.3)}
+#top{display:flex;justify-content:space-between;height:14.8rem}
 #hm{font-size:7rem;font-weight:200;line-height:1}
 #ss{font-size:3rem;font-weight:200;vertical-align:top;position:relative;top:.3rem;margin-left:.4rem}
 #date{font-size:1.7rem;margin-top:.8rem}
-#wx{width:22rem;text-align:right}
+#wx{width:26rem;box-sizing:border-box;align-self:flex-start;text-align:right;background:rgba(255,255,255,.1);border:.1rem solid rgba(255,255,255,.1);border-radius:1.8rem;padding:1rem 1.6rem 1.2rem}
 #cur{font-size:3.5rem;font-weight:200;line-height:1}
-#ico{font-size:3rem;margin-left:.8rem}
+#ico svg{width:3.4rem;height:3.4rem;vertical-align:-.6rem;margin-left:.8rem}
 #fc{display:flex;justify-content:space-between;margin-top:1rem}
 #fc div{text-align:center;font-size:1.1rem}
 #fc b{display:block;background:rgba(255,255,255,.22);border-radius:1rem;padding:.2rem .7rem;font-size:1rem;font-weight:400;margin-bottom:.3rem}
-#fc i{display:block;font-style:normal;font-size:2rem;line-height:1.2}
-#ev{display:flex;margin-top:1.9rem}
+#fc i{display:block}
+#fc svg{display:block;width:2.3rem;height:2.3rem;margin:.3rem auto .4rem}
+#ev{display:flex;margin-top:1rem}
 .col{flex:1;margin-right:1rem}
 .col:last-child{margin-right:0}
 .col h3{margin:0 0 .3rem;font-size:1.9rem;font-weight:300}
 .col h3 span{font-size:1.1rem;margin-left:.4rem;font-weight:400}
-.card{border-left:.25rem solid #fff;background:rgba(255,255,255,.14);padding:.4rem .8rem;margin-bottom:.4rem;font-size:1.1rem;font-weight:500;line-height:1.3}
+.card{position:relative;border-radius:1.1rem;background:rgba(255,255,255,.12);border:.1rem solid rgba(255,255,255,.08);padding:.6rem .9rem .6rem 1.7rem;margin-bottom:.5rem;font-size:1.1rem;font-weight:500;line-height:1.3}
 .card small{display:block;font-size:1rem;font-weight:500}
+.card:before{content:"";position:absolute;left:.7rem;top:.7rem;bottom:.7rem;width:.25rem;border-radius:.2rem;background:#fff}
 .msg{margin:0;font-size:1.2rem;color:rgba(255,255,255,.6)}
 .card em{display:block;font-style:normal;font-weight:400;color:rgba(255,255,255,.6);font-size:1rem}
+#sub{font-size:1.2rem;color:rgba(255,255,255,.7);margin-top:.5rem;white-space:pre}
+#rn{margin-top:.9rem;padding-top:.8rem;border-top:.1rem solid rgba(255,255,255,.15);font-size:1.1rem;text-align:center}
+#rn svg{width:1.3rem;height:1.3rem;vertical-align:-.25rem;margin-right:.4rem}
+.card small{color:var(--k,#fff);white-space:pre}
+.card b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-weight:500;font-size:1.2rem;line-height:1.25;margin:.1rem 0 .15rem}
+.card:before{background:var(--k,#fff)}
+.card.now{background:rgba(255,255,255,.22);border-color:rgba(255,255,255,.3)}
+.card.done{opacity:.45}
+.bar{position:absolute;left:1.7rem;right:.9rem;bottom:.35rem;height:.2rem;border-radius:.1rem;background:rgba(255,255,255,.2)}
+.bar i{display:block;height:100%;border-radius:.1rem;background:var(--k,#fff)}
+.card.now{padding-bottom:1rem}
+.more{font-size:1rem;color:rgba(255,255,255,.6);padding-left:.8rem}
+body.night #dim{background:rgba(0,0,0,.82)}
+body.night #ss{display:none}
+body.night #ui{opacity:.65}
 </style>
 </head>
 <body>
@@ -42,8 +61,8 @@ body{margin:0;width:100vw;height:100vh;overflow:hidden;background:#0a1620;color:
 <div id="dim"></div>
 <div id="ui">
   <div id="top">
-    <div><div><span id="hm"></span><span id="ss"></span></div><div id="date"></div></div>
-    <div id="wx"><div><span id="cur"></span><span id="ico"></span></div><div id="fc"></div></div>
+    <div><div><span id="hm"></span><span id="ss"></span></div><div id="date"></div><div id="sub"></div></div>
+    <div id="wx"><div><span id="cur"></span><span id="ico"></span></div><div id="fc"></div><div id="rn"></div></div>
   </div>
   <div id="ev"></div>
 </div>
@@ -53,8 +72,10 @@ var C = {
   lat: 54.9783, lon: -1.6178,        // weather location (Newcastle upon Tyne)
   tz: 'Europe/London',               // fixed, so the TV's own timezone setting doesn't matter
   days: 4,                           // calendar columns (days that have events)
+  night: [23, 6],                    // dim the screen between these hours (24h clock)
+  rain: true,                        // show today's chance of rain
   branch: 'main',                    // repo branch that holds data/*.json
-  perDay: 4                          // max events shown per day
+  perDay: 3                          // max events shown per day
 };
 var $ = function (id) { return document.getElementById(id); };
 function fmt(o) { return new Intl.DateTimeFormat('en-US', Object.assign({ timeZone: C.tz }, o)); }
@@ -70,8 +91,14 @@ function tick() {
   var d = new Date(), p = {};
   fClock.formatToParts(d).forEach(function (x) { p[x.type] = x.value; });
   var hm = p.hour + ':' + p.minute;
-  if (hm !== lastMin) { lastMin = hm; $('hm').textContent = hm; $('date').textContent = fDate.format(d); }
+  if (hm !== lastMin) { lastMin = hm; $('hm').textContent = hm; nightMode(d); $('date').textContent = fDate.format(d); }
   $('ss').textContent = p.second;
+}
+var fN = new Intl.DateTimeFormat('en-GB', { timeZone: C.tz, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+function nightMode(d) {
+  var h = Number(fN.format(d).slice(0, 2)), a = C.night[0], b = C.night[1], m = d.getMinutes();
+  document.body.className = (a > b ? (h >= a || h < b) : (h >= a && h < b)) ? 'night' : '';
+  $('ui').style.transform = 'translate(' + ((m % 5) - 2) * .15 + 'rem,' + ((m % 3) - 1) * .15 + 'rem)';   // slow pixel shift
 }
 setInterval(tick, 1000); tick();
 
@@ -90,53 +117,88 @@ function getData(name, ok, fail) {
 }
 
 /* Weather (Open-Meteo: free, no key) */
-var ICON = function (c) {
-  if (c === 0) return '\u2600'; if (c < 3) return '\u26C5'; if (c === 3 || c === 45 || c === 48) return '\u2601';
-  if (c >= 71 && c <= 77 || c === 85 || c === 86) return '\u2744'; if (c >= 95) return '\u26A1'; return '\u2614';
+var P = {
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  part: '<path d="M12 2v2M4.9 4.9l1.4 1.4M20 12h2M19.1 4.9l-1.4 1.4M15.9 12.7a4 4 0 0 0-5.9-4.2M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6z"/>',
+  cloud: '<path d="M17.5 19H9a7 7 0 1 1 6.7-9h1.8a4.5 4.5 0 0 1 0 9z"/>',
+  rain: '<path d="M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 2.5 8.2M16 14v6M8 14v6M12 16v6"/>',
+  snow: '<path d="M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 2.5 8.2M8 15h.01M8 19h.01M12 17h.01M12 21h.01M16 15h.01M16 19h.01"/>',
+  storm: '<path d="M6 16.3A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 .5 9M13 12l-3 5h4l-3 5"/>'
 };
+var ICON = function (c) {
+  var k = c === 0 ? 'sun' : c < 3 ? 'part' : (c === 3 || c === 45 || c === 48) ? 'cloud' :
+    ((c >= 71 && c <= 77) || c === 85 || c === 86) ? 'snow' : c >= 95 ? 'storm' : 'rain';
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">' + P[k] + '</svg>';
+};
+var SV = '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">';
+var DROP = SV + '<path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/></svg>';
+function t12(iso) { var h = Number(iso.slice(11, 13)); return (h % 12 || 12) + ':' + iso.slice(14, 16) + (h < 12 ? ' AM' : ' PM'); }
 function weather() {
   getJSON('https://api.open-meteo.com/v1/forecast?latitude=' + C.lat + '&longitude=' + C.lon +
-    '&current=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min' +
-    '&timezone=' + encodeURIComponent(C.tz) + '&forecast_days=4', function (w) {
-    $('cur').textContent = Math.round(w.current.temperature_2m) + '\u00B0';
-    $('ico').textContent = ICON(w.current.weather_code);
+    '&current=temperature_2m,apparent_temperature,wind_speed_10m,weather_code' +
+    '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset' +
+    '&hourly=precipitation_probability&timezone=' + encodeURIComponent(C.tz) + '&forecast_days=4', function (w) {
+    var d = new Date(), c = w.current, D = w.daily, nowIso = fKey.format(d) + 'T' + fN.format(d);
+    $('cur').textContent = Math.round(c.temperature_2m) + '\u00B0';
+    $('ico').innerHTML = ICON(c.weather_code);
     var h = '';
-    for (var i = 0; i < w.daily.time.length; i++) {
-      var dt = new Date(w.daily.time[i] + 'T12:00:00Z');
-      h += '<div><b>' + (i ? fWds.format(dt).toUpperCase() : 'TODAY') + '</b><i>' + ICON(w.daily.weather_code[i]) + '</i>' +
-        Math.round(w.daily.temperature_2m_max[i]) + '&nbsp;&nbsp;' + Math.round(w.daily.temperature_2m_min[i]) + '</div>';
+    for (var i = 0; i < D.time.length; i++) {
+      var dt = new Date(D.time[i] + 'T12:00:00Z');
+      h += '<div><b>' + (i ? fWds.format(dt).toUpperCase() : 'TODAY') + '</b><i>' + ICON(D.weather_code[i]) + '</i>' +
+        Math.round(D.temperature_2m_max[i]) + '&nbsp;&nbsp;' + Math.round(D.temperature_2m_min[i]) + '</div>';
     }
     $('fc').innerHTML = h;
+    $('sub').textContent = 'Feels like ' + Math.round(c.apparent_temperature) + '\u00B0  \u00B7  Wind ' + Math.round(c.wind_speed_10m) +
+      ' km/h  \u00B7  ' + (nowIso > D.sunset[0] ? 'Sunrise ' + t12(D.sunrise[1]) : 'Sunset ' + t12(D.sunset[0]));
+    var p = D.precipitation_probability_max[0], from = '';
+    if (C.rain && p != null) {
+      for (var j = 0; j < w.hourly.time.length && !from; j++) {
+        var t = w.hourly.time[j];
+        if (t.slice(0, 10) === nowIso.slice(0, 10) && t.slice(0, 13) >= nowIso.slice(0, 13) && w.hourly.precipitation_probability[j] >= 50) from = t12(t).replace(':00', '');
+      }
+      $('rn').innerHTML = DROP + p + '% chance of rain today' + (from ? ', from ' + from : '');
+    }
   });
 }
 
 /* Calendar (data/events.json is written by the GitHub Action) */
 function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 function dayAfter(key) { return fKey.format(new Date(new Date(key + 'T12:00:00Z').getTime() + 864e5)); }
-var have = false;
+var EV = [], have = false;
+var KC = { lecture: '#7cc4ff', seminar: '#c4a7ff', practical: '#6ee7b7' };   // anything else is amber
+function mins(ms) { var m = Math.max(1, Math.round(ms / 6e4)); return m < 60 ? m + ' min' : Math.floor(m / 60) + 'h ' + (m % 60) + 'm'; }
+function render() {
+  if (!have) return;
+  var now = Date.now(), today = fKey.format(new Date()), tomorrow = dayAfter(today), cols = {}, keys = [], next = null;
+  EV.forEach(function (e) {
+    if (!next && e.s > now) next = e;
+    var k = fKey.format(new Date(e.s));
+    if (k < today) return;
+    if (!cols[k]) { cols[k] = []; keys.push(k); }
+    cols[k].push(e);
+  });
+  keys.sort();
+  var h = '';
+  keys.slice(0, C.days).forEach(function (k) {
+    var L = cols[k], name = k === today ? 'Today' : k === tomorrow ? 'Tomorrow' : fWd.format(new Date(k + 'T12:00:00Z'));
+    while (k === today && L.length > C.perDay && L[0].e < now) L.shift();   // make room by dropping finished ones
+    h += '<div class="col"><h3>' + Number(k.slice(8)) + '<span>' + name + '</span></h3>';
+    L.slice(0, C.perDay).forEach(function (e) {
+      var live = e.s <= now && now < e.e, done = e.e < now;
+      var kind = e.k === 'other' && !e.l ? 'Online' : e.k ? e.k.charAt(0).toUpperCase() + e.k.slice(1) : '';
+      var tag = live ? 'Now' : (e === next && e.s - now < 108e5) ? 'Next, in ' + mins(e.s - now) : kind;
+      h += '<div class="card' + (live ? ' now' : done ? ' done' : '') + '" style="--k:' + (KC[e.k] || '#ffd479') + '"><small>' +
+        (e.a ? 'All day' : fTime.format(new Date(e.s))) + (tag ? '  \u00B7  ' + tag : '') + '</small><b>' + esc(e.n || e.t) + '</b>' +
+        (e.c || e.l ? '<em>' + esc([e.c, e.l].filter(Boolean).join('  \u00B7  ')) + '</em>' : '') +
+        (live ? '<span class="bar"><i style="width:' + Math.round((now - e.s) / (e.e - e.s) * 100) + '%"></i></span>' : '') + '</div>';
+    });
+    if (L.length > C.perDay) h += '<div class="more">+' + (L.length - C.perDay) + ' more</div>';
+    h += '</div>';
+  });
+  $('ev').innerHTML = h || '<p class="msg">No upcoming events</p>';
+}
 function calendar() {
-  getData('events.json', function (list) {
-    var now = Date.now(), today = fKey.format(new Date()), tomorrow = dayAfter(today), cols = {}, keys = [];
-    list.forEach(function (e) {
-      if (e.e < now) return;
-      var k = fKey.format(new Date(e.s));
-      if (!cols[k]) { cols[k] = []; keys.push(k); }
-      cols[k].push(e);
-    });
-    keys.sort();
-    var h = '';
-    keys.slice(0, C.days).forEach(function (k) {
-      var d = new Date(k + 'T12:00:00Z'), name = k === today ? 'Today' : k === tomorrow ? 'Tomorrow' : fWd.format(d);
-      h += '<div class="col"><h3>' + Number(k.slice(8)) + '<span>' + name + '</span></h3>';
-      cols[k].slice(0, C.perDay).forEach(function (e) {
-        var t = e.a ? 'All day' : fTime.format(new Date(e.s));
-        h += '<div class="card"><small>' + t + '</small>' + esc(e.t) + (e.l ? '<em>at ' + esc(e.l) + '</em>' : '') + '</div>';
-      });
-      h += '</div>';
-    });
-    have = true;
-    $('ev').innerHTML = h || '<p class="msg">No upcoming events</p>';
-  }, function () {
+  getData('events.json', function (list) { EV = list; have = true; render(); }, function () {
     if (!have) $('ev').innerHTML = '<p class="msg">Calendar data not found. Run the "Update dashboard data" workflow once.</p>';
   });
 }
@@ -182,6 +244,7 @@ s.onerror = useFallback; document.head.appendChild(s);
 weather(); calendar();
 setInterval(weather, 30 * 60000);
 setInterval(calendar, 10 * 60000);
+setInterval(render, 30000);   // keeps now/next and the progress bar current
 setTimeout(function () { location.reload(); }, 6 * 3600000);   // self-heal: reload every 6 hours
 </script>
 </body>

@@ -1,10 +1,19 @@
 """Runs inside GitHub Actions. Writes data/events.json (always) and data/photos.json (every ~4h).
 Secrets come from environment variables, never from the repo: CAL_URL (required), ALBUM_URL (optional)."""
-import datetime as dt, json, os, time, urllib.request, urllib.error
+import datetime as dt, json, os, re, time, urllib.request, urllib.error
 from zoneinfo import ZoneInfo
 
 TZ = ZoneInfo("Europe/London")
 UA = {"User-Agent": "Mozilla/5.0 tv-dashboard"}
+# Fallback module names, used when an event has no description. The feed's own description is preferred.
+NAMES = {"CSC8202": "Information Security and Trust", "CSC8204": "High Integrity Software Development",
+         "CSC8207": "Security Analysis of Complex Systems",
+         "CSC8208": "Research Methods and Group Project in Security and Resilience",
+         "CSC8209": "Project and Dissertation in Computer Security and Resilience",
+         "CSC8213": "Advanced Topics in Cyber Security", "CSC8214": "Systems Security",
+         "CSC8215": "Network Security and Ethical Hacking", "CSC8216": "Risk and Trust Management",
+         "INU6414": "Writing for Postgraduates in Computer Science",
+         "INU6424": "Writing for Postgraduates in Computer Science"}
 
 
 def events():
@@ -22,8 +31,14 @@ def events():
                 s, e = dt.datetime.combine(s, dt.time(), TZ), dt.datetime.combine(e, dt.time(), TZ)
             else:
                 s, e = (x if x.tzinfo else x.replace(tzinfo=TZ) for x in (s, e))
+            title = str(ev.get("SUMMARY", ""))
+            code = title.split("/")[0].strip()
+            lines = [x.strip() for x in str(ev.get("DESCRIPTION", "")).split("\n")]
+            name = (lines[0] if lines[0] else NAMES.get(code, "")).replace("Postgaduates", "Postgraduates")
             out.append({"s": int(s.timestamp() * 1000), "e": int(e.timestamp() * 1000), "a": allday,
-                        "t": str(ev.get("SUMMARY", "")), "l": str(ev.get("LOCATION", ""))})
+                        "t": title, "l": str(ev.get("LOCATION", "")), "n": name,
+                        "k": lines[1].lower() if len(lines) > 1 else "",
+                        "c": code if re.fullmatch(r"[A-Z]{3}\d{4}", code) else ""})
         except Exception as exc:
             print("skipped one event:", exc)
     out.sort(key=lambda x: x["s"])
