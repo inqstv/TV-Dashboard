@@ -94,7 +94,7 @@ var C = {
   lat: 54.9783, lon: -1.6178,        // weather location (Newcastle upon Tyne)
   tz: 'Europe/London',               // fixed, so the TV's own timezone setting doesn't matter
   days: 4,                           // calendar columns (days that have events)
-  night: [23, 6],                    // dim the screen between these hours (24h clock)
+  night: [23, 8],                    // dim the screen between these hours (24h clock)
   rain: true,                        // show today's chance of rain
   branch: 'main',                    // repo branch that holds data/*.json
   perDay: 3                          // max events shown per day
@@ -256,8 +256,14 @@ function useFallback() {
   if (fallback) return; fallback = true;
   var f = $('bg'); if (f && f.parentNode) f.parentNode.removeChild(f);
   getData('photos.json', function (j) {
-    photos = (j.urls || []).sort(function () { return Math.random() - .5; });
+    photos = Array.isArray(j.urls) ? j.urls.filter(function (url) { return typeof url === 'string' && url; }).sort(function () { return Math.random() - .5; }) : [];
+    if (!photos.length) {
+      console.error('Photo background is enabled, but data/photos.json contains no photo URLs.');
+      return;
+    }
     showPhoto(); slideTimer = setInterval(showPhoto, 60000);
+  }, function () {
+    console.error('Photo background is enabled, but data/photos.json could not be loaded.');
   });
 }
 var player;
