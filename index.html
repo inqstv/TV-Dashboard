@@ -15,32 +15,38 @@ body{margin:0;width:100vw;height:100vh;overflow:hidden;background:#0a1620;color:
 .ph{background-size:cover;background-position:center;opacity:0;transition:opacity 3s}
 .ph.on{opacity:1}
 #dim{position:fixed;left:0;top:0;width:100%;height:100%;background:rgba(5,12,20,.55)}
-#ui{position:fixed;left:9.5rem;right:9.5rem;top:8rem;bottom:3rem}
-#top{display:flex;justify-content:space-between;height:14.8rem}
-#hm{font-size:7rem;font-weight:200;line-height:1}
-#ss{font-size:3rem;font-weight:200;vertical-align:top;position:relative;top:.3rem;margin-left:.4rem}
-#date{font-size:1.7rem;margin-top:.8rem}
-#wx{width:26rem;box-sizing:border-box;align-self:flex-start;text-align:right;background:rgba(255,255,255,.1);border:.1rem solid rgba(255,255,255,.1);border-radius:1.8rem;padding:1rem 1.6rem 1.2rem}
-#cur{font-size:3.5rem;font-weight:200;line-height:1}
-#ico svg{width:3.4rem;height:3.4rem;vertical-align:-.6rem;margin-left:.8rem}
-#fc{display:flex;justify-content:space-between;margin-top:1rem}
-#fc div{text-align:center;font-size:1.1rem}
-#fc b{display:block;background:rgba(255,255,255,.22);border-radius:1rem;padding:.2rem .7rem;font-size:1rem;font-weight:400;margin-bottom:.3rem}
+#ui{position:fixed;left:9.5rem;right:9.5rem;top:3rem;bottom:2rem}
+#top{display:flex;justify-content:space-between;height:15.6rem}
+#hm{font-size:8rem;font-weight:200;line-height:1}
+#ss{font-size:3.4rem;font-weight:200;vertical-align:top;position:relative;top:.3rem;margin-left:.4rem}
+#date{font-size:1.9rem;margin-top:.8rem}
+#wx{width:30rem;box-sizing:border-box;align-self:flex-start;background:rgba(255,255,255,.1);border:.1rem solid rgba(255,255,255,.1);border-radius:1.8rem;padding:1.2rem 1.8rem 1.1rem}
+#w1{display:flex;justify-content:space-between;align-items:center}
+#cur{font-size:4.2rem;font-weight:200;line-height:1}
+#ico svg{width:3.6rem;height:3.6rem;vertical-align:-.7rem;margin-left:1rem}
+#wr{text-align:right}
+#cond{display:block;font-size:1.6rem;font-weight:500}
+#hr{display:block;font-size:1.2rem;color:#7cc4ff;margin-top:.2rem}
+#sub{margin-top:.8rem;padding-bottom:.9rem;border-bottom:.1rem solid rgba(255,255,255,.15);font-size:1.1rem;color:rgba(255,255,255,.7);white-space:pre}
+#fc{display:flex;margin-top:.9rem}
+#fc div{flex:1;text-align:center;font-size:1.2rem}
+#fc b{display:inline-block;background:rgba(255,255,255,.18);border-radius:1rem;padding:.2rem .8rem;font-size:1rem;font-weight:400}
+#fc div.t b{background:#fff;color:#12202c;font-weight:500}
 #fc i{display:block}
-#fc svg{display:block;width:2.3rem;height:2.3rem;margin:.3rem auto .4rem}
-#ev{display:flex;margin-top:1rem}
-.col{flex:1;margin-right:1rem}
+#fc svg{display:block;width:2.2rem;height:2.2rem;margin:.3rem auto}
+#fc span{color:rgba(255,255,255,.6);margin-left:.5rem}
+#fc u{display:block;text-decoration:none;font-size:1rem;color:#7cc4ff;margin-top:.2rem}
+#fc u svg{display:inline-block;width:1rem;height:1rem;margin:0 .2rem 0 0;vertical-align:-.15rem}
+#ev{display:flex;margin-top:1.2rem}
+.col{flex:1;margin-right:1.2rem}
 .col:last-child{margin-right:0}
 .col h3{margin:0 0 .3rem;font-size:1.9rem;font-weight:300}
 .col h3 span{font-size:1.1rem;margin-left:.4rem;font-weight:400}
-.card{position:relative;border-radius:1.1rem;background:rgba(255,255,255,.12);border:.1rem solid rgba(255,255,255,.08);padding:.6rem .9rem .6rem 1.7rem;margin-bottom:.5rem;font-size:1.1rem;font-weight:500;line-height:1.3}
+.card{position:relative;border-radius:1.1rem;background:rgba(255,255,255,.12);border:.1rem solid rgba(255,255,255,.08);padding:.6rem .9rem .6rem 1.7rem;margin-bottom:.6rem;font-size:1.1rem;font-weight:500;line-height:1.3}
 .card small{display:block;font-size:1rem;font-weight:500}
 .card:before{content:"";position:absolute;left:.7rem;top:.7rem;bottom:.7rem;width:.25rem;border-radius:.2rem;background:#fff}
 .msg{margin:0;font-size:1.2rem;color:rgba(255,255,255,.6)}
 .card em{display:block;font-style:normal;font-weight:400;color:rgba(255,255,255,.6);font-size:1rem}
-#sub{font-size:1.2rem;color:rgba(255,255,255,.7);margin-top:.5rem;white-space:pre}
-#rn{margin-top:.9rem;padding-top:.8rem;border-top:.1rem solid rgba(255,255,255,.15);font-size:1.1rem;text-align:center}
-#rn svg{width:1.3rem;height:1.3rem;vertical-align:-.25rem;margin-right:.4rem}
 .card small{color:var(--k,#fff);white-space:pre}
 .card b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-weight:500;font-size:1.2rem;line-height:1.25;margin:.1rem 0 .15rem}
 .card:before{background:var(--k,#fff)}
@@ -61,8 +67,8 @@ body.night #ui{opacity:.65}
 <div id="dim"></div>
 <div id="ui">
   <div id="top">
-    <div><div><span id="hm"></span><span id="ss"></span></div><div id="date"></div><div id="sub"></div></div>
-    <div id="wx"><div><span id="cur"></span><span id="ico"></span></div><div id="fc"></div><div id="rn"></div></div>
+    <div><div><span id="hm"></span><span id="ss"></span></div><div id="date"></div></div>
+    <div id="wx"><div id="w1"><div><span id="cur"></span><span id="ico"></span></div><div id="wr"><b id="cond"></b><span id="hr"></span></div></div><div id="sub"></div><div id="fc"></div></div>
   </div>
   <div id="ev"></div>
 </div>
@@ -133,6 +139,9 @@ var ICON = function (c) {
 var SV = '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">';
 var DROP = SV + '<path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/></svg>';
 function t12(iso) { var h = Number(iso.slice(11, 13)); return (h % 12 || 12) + ':' + iso.slice(14, 16) + (h < 12 ? ' AM' : ' PM'); }
+var WX = {0:'Clear',1:'Mostly clear',2:'Partly cloudy',3:'Overcast',45:'Fog',48:'Fog',51:'Light drizzle',53:'Drizzle',55:'Heavy drizzle',56:'Freezing drizzle',57:'Freezing drizzle',
+  61:'Light rain',63:'Rain',65:'Heavy rain',66:'Freezing rain',67:'Freezing rain',71:'Light snow',73:'Snow',75:'Heavy snow',77:'Snow grains',80:'Light showers',81:'Showers',
+  82:'Heavy showers',85:'Snow showers',86:'Snow showers',95:'Thunderstorm',96:'Thunderstorm',99:'Thunderstorm'};
 function weather() {
   getJSON('https://api.open-meteo.com/v1/forecast?latitude=' + C.lat + '&longitude=' + C.lon +
     '&current=temperature_2m,apparent_temperature,wind_speed_10m,weather_code' +
@@ -141,23 +150,26 @@ function weather() {
     var d = new Date(), c = w.current, D = w.daily, nowIso = fKey.format(d) + 'T' + fN.format(d);
     $('cur').textContent = Math.round(c.temperature_2m) + '\u00B0';
     $('ico').innerHTML = ICON(c.weather_code);
+    $('cond').textContent = WX[c.weather_code] || '';
     var h = '';
     for (var i = 0; i < D.time.length; i++) {
-      var dt = new Date(D.time[i] + 'T12:00:00Z');
-      h += '<div><b>' + (i ? fWds.format(dt).toUpperCase() : 'TODAY') + '</b><i>' + ICON(D.weather_code[i]) + '</i>' +
-        Math.round(D.temperature_2m_max[i]) + '&nbsp;&nbsp;' + Math.round(D.temperature_2m_min[i]) + '</div>';
+      var dt = new Date(D.time[i] + 'T12:00:00Z'), p = D.precipitation_probability_max[i];
+      h += '<div' + (i ? '' : ' class="t"') + '><b>' + (i ? fWds.format(dt).toUpperCase() : 'TODAY') + '</b><i>' + ICON(D.weather_code[i]) + '</i>' +
+        Math.round(D.temperature_2m_max[i]) + '\u00B0<span>' + Math.round(D.temperature_2m_min[i]) + '\u00B0</span>' +
+        (C.rain && p != null ? '<u>' + DROP + p + '%</u>' : '') + '</div>';
     }
     $('fc').innerHTML = h;
     $('sub').textContent = 'Feels like ' + Math.round(c.apparent_temperature) + '\u00B0  \u00B7  Wind ' + Math.round(c.wind_speed_10m) +
       ' km/h  \u00B7  ' + (nowIso > D.sunset[0] ? 'Sunrise ' + t12(D.sunrise[1]) : 'Sunset ' + t12(D.sunset[0]));
-    var p = D.precipitation_probability_max[0], from = '';
-    if (C.rain && p != null) {
+    var from = '';
+    if (C.rain) {
       for (var j = 0; j < w.hourly.time.length && !from; j++) {
         var t = w.hourly.time[j];
-        if (t.slice(0, 10) === nowIso.slice(0, 10) && t.slice(0, 13) >= nowIso.slice(0, 13) && w.hourly.precipitation_probability[j] >= 50) from = t12(t).replace(':00', '');
+        if (t.slice(0, 10) === nowIso.slice(0, 10) && t.slice(0, 13) >= nowIso.slice(0, 13) && w.hourly.precipitation_probability[j] >= 50)
+          from = t.slice(0, 13) === nowIso.slice(0, 13) ? 'Rain likely now' : 'Rain from ' + t12(t).replace(':00', '');
       }
-      $('rn').innerHTML = DROP + p + '% chance of rain today' + (from ? ', from ' + from : '');
     }
+    $('hr').textContent = from;
   });
 }
 
@@ -171,6 +183,7 @@ function render() {
   if (!have) return;
   var now = Date.now(), today = fKey.format(new Date()), tomorrow = dayAfter(today), cols = {}, keys = [], next = null;
   EV.forEach(function (e) {
+    if (e.e <= now) return;   // finished events are removed
     if (!next && e.s > now) next = e;
     var k = fKey.format(new Date(e.s));
     if (k < today) return;
@@ -181,13 +194,12 @@ function render() {
   var h = '';
   keys.slice(0, C.days).forEach(function (k) {
     var L = cols[k], name = k === today ? 'Today' : k === tomorrow ? 'Tomorrow' : fWd.format(new Date(k + 'T12:00:00Z'));
-    while (k === today && L.length > C.perDay && L[0].e < now) L.shift();   // make room by dropping finished ones
     h += '<div class="col"><h3>' + Number(k.slice(8)) + '<span>' + name + '</span></h3>';
     L.slice(0, C.perDay).forEach(function (e) {
-      var live = e.s <= now && now < e.e, done = e.e < now;
+      var live = e.s <= now && now < e.e;
       var kind = e.k === 'other' && !e.l ? 'Online' : e.k ? e.k.charAt(0).toUpperCase() + e.k.slice(1) : '';
       var tag = live ? 'Now' : (e === next && e.s - now < 108e5) ? 'Next, in ' + mins(e.s - now) : kind;
-      h += '<div class="card' + (live ? ' now' : done ? ' done' : '') + '" style="--k:' + (KC[e.k] || '#ffd479') + '"><small>' +
+      h += '<div class="card' + (live ? ' now' : '') + '" style="--k:' + (KC[e.k] || '#ffd479') + '"><small>' +
         (e.a ? 'All day' : fTime.format(new Date(e.s))) + (tag ? '  \u00B7  ' + tag : '') + '</small><b>' + esc(e.n || e.t) + '</b>' +
         (e.c || e.l ? '<em>' + esc([e.c, e.l].filter(Boolean).join('  \u00B7  ')) + '</em>' : '') +
         (live ? '<span class="bar"><i style="width:' + Math.round((now - e.s) / (e.e - e.s) * 100) + '%"></i></span>' : '') + '</div>';
