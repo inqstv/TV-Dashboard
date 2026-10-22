@@ -13,7 +13,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install icalendar recurring-ical-events
+      - run: pip install icalendar recurring-ical-events yt-dlp
+      - run: python scripts/fetch_video.py
       - run: python scripts/fetch_data.py
         env:
           CAL_URL: ${{ secrets.CAL_URL }}

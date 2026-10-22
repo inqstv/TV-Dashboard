@@ -12,6 +12,7 @@ html{font-size:calc(100vw/96)}
 body{margin:0;width:100vw;height:100vh;overflow:hidden;background:#0a1620;color:#fff;font-family:Inter,Roboto,"Helvetica Neue",Arial,sans-serif;cursor:none}
 .ph{position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none}
 #bg{position:fixed;left:50%;top:50%;width:177.78vh;min-width:100vw;height:56.25vw;min-height:100vh;transform:translate(-50%,-50%);border:0;pointer-events:none}
+#local-bg{display:none;position:fixed;left:50%;top:50%;width:177.78vh;min-width:100vw;height:56.25vw;min-height:100vh;transform:translate(-50%,-50%);border:0;object-fit:cover;pointer-events:none}
 #audio-bg{position:fixed;left:-1px;top:-1px;width:1px;height:1px;border:0;opacity:0;pointer-events:none}
 .ph{background-size:cover;background-position:center;opacity:0;transition:opacity 3s}
 .ph.on{opacity:1}
@@ -75,6 +76,7 @@ body.night #ui{opacity:.65}
 </head>
 <body>
 <div id="bg"></div>
+<video id="local-bg" muted autoplay playsinline></video>
 <div id="audio-bg"></div>
 <div class="ph" id="p0"></div><div class="ph" id="p1"></div>
 <div id="dim"></div>
@@ -269,6 +271,7 @@ function useFallback() {
 }
 var player, audioPlayer;
 var bgLoopTimer;
+var localBackground = false;
 function scheduleBackgroundLoop() {
   clearTimeout(bgLoopTimer);
   var duration = player && player.getDuration ? player.getDuration() : 0;
@@ -281,7 +284,7 @@ function scheduleBackgroundLoop() {
   }, Math.max(500, (duration - .2) * 1000));
 }
 function onYouTubeIframeAPIReady() {
-  player = new YT.Player('bg', {
+  if (!localBackground) player = new YT.Player('bg', {
     videoId: C.video, width: '100%', height: '100%',
     playerVars: { autoplay: 1, mute: 1, controls: 0, fs: 0, rel: 0, modestbranding: 1, playsinline: 1, iv_load_policy: 3, disablekb: 1, vq: 'hd720' },
     events: {
@@ -318,7 +321,7 @@ function onYouTubeIframeAPIReady() {
   });
   var bad = 0;   // watchdog: nudge a stalled player, give up after ~3 minutes
   setInterval(function () {
-    if (fallback || !player.getPlayerState) return;
+    if (localBackground || fallback || !player || !player.getPlayerState) return;
     var s = player.getPlayerState();
     if (s === 1 || s === 3) { bad = 0; return; }
     player.playVideo();
@@ -330,11 +333,30 @@ function onYouTubeIframeAPIReady() {
     if (s !== 1 && s !== 3) audioPlayer.playVideo();
   }, 30000);
 }
+function startYouTube() {
+  var s = document.createElement('script'); s.src = 'https://www.youtube.com/iframe_api';
+  s.onerror = useFallback; document.head.appendChild(s);
+}
+function startLocalVideo(info) {
+  localBackground = true;
+  $('bg').style.display = 'none';
+  var video = $('local-bg');
+  video.src = info.src || 'data/background.mp4';
+  video.style.display = 'block';
+  video.onerror = useFallback;
+  video.addEventListener('ended', function () {
+    video.currentTime = 0;
+    video.play();
+  });
+  video.play().catch(function () {});
+}
 if (C.background === 'photos') {
   useFallback();
 } else {
-  var s = document.createElement('script'); s.src = 'https://www.youtube.com/iframe_api';
-  s.onerror = useFallback; document.head.appendChild(s);
+  getData('video.json', function (info) {
+    if (info && info.mode === 'local') startLocalVideo(info);
+    else startYouTube();
+  }, startYouTube);
 }
 
 weather(); calendar();
