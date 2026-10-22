@@ -12,6 +12,7 @@ html{font-size:calc(100vw/96)}
 body{margin:0;width:100vw;height:100vh;overflow:hidden;background:#0a1620;color:#fff;font-family:Inter,Roboto,"Helvetica Neue",Arial,sans-serif;cursor:none}
 .ph{position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none}
 #bg{position:fixed;left:50%;top:50%;width:177.78vh;min-width:100vw;height:56.25vw;min-height:100vh;transform:translate(-50%,-50%);border:0;pointer-events:none}
+#audio-bg{position:fixed;left:-1px;top:-1px;width:1px;height:1px;border:0;opacity:0;pointer-events:none}
 .ph{background-size:cover;background-position:center;opacity:0;transition:opacity 3s}
 .ph.on{opacity:1}
 #dim{position:fixed;left:0;top:0;width:100%;height:100%;background:rgba(5,12,20,.55)}
@@ -74,6 +75,7 @@ body.night #ui{opacity:.65}
 </head>
 <body>
 <div id="bg"></div>
+<div id="audio-bg"></div>
 <div class="ph" id="p0"></div><div class="ph" id="p1"></div>
 <div id="dim"></div>
 <div id="ui">
@@ -86,7 +88,8 @@ body.night #ui{opacity:.65}
 </div>
 <script>
 var C = {
-  video: 'vYIYIVmOo3Q',              // YouTube live stream id
+  video: 'o4qjk8_5gmU',              // YouTube live stream id used for the visual background
+  audioVideo: 'rFZHOHl-L8A',         // separate YouTube live stream used for sound
   background: 'video',               // choose 'video' or 'photos'
   audio: true,                       // set true to allow background video audio (browser autoplay rules still apply)
   lat: 54.9783, lon: -1.6178,        // weather location (Newcastle upon Tyne)
@@ -264,13 +267,25 @@ function useFallback() {
     console.error('Photo background is enabled, but data/photos.json could not be loaded.');
   });
 }
-var player;
+var player, audioPlayer;
 function onYouTubeIframeAPIReady() {
   player = new YT.Player('bg', {
     videoId: C.video, width: '100%', height: '100%',
-    playerVars: { autoplay: 1, mute: C.audio ? 0 : 1, controls: 0, rel: 0, modestbranding: 1, playsinline: 1, iv_load_policy: 3, disablekb: 1, vq: 'hd720' },
+    playerVars: { autoplay: 1, mute: 1, controls: 0, rel: 0, modestbranding: 1, playsinline: 1, iv_load_policy: 3, disablekb: 1, vq: 'hd720' },
     events: {
       onReady: function (e) {
+        e.target.mute();
+        e.target.playVideo();
+      },
+      onError: useFallback
+    }
+  });
+  audioPlayer = new YT.Player('audio-bg', {
+    videoId: C.audioVideo, width: '1', height: '1',
+    playerVars: { autoplay: 1, mute: C.audio ? 0 : 1, controls: 0, rel: 0, modestbranding: 1, playsinline: 1, iv_load_policy: 3, disablekb: 1 },
+    events: {
+      onReady: function (e) {
+        e.target.getIframe().setAttribute('allow', 'autoplay; encrypted-media');
         if (C.audio) {
           e.target.unMute();
           e.target.setVolume(100);
@@ -278,8 +293,7 @@ function onYouTubeIframeAPIReady() {
           e.target.mute();
         }
         e.target.playVideo();
-      },
-      onError: useFallback
+      }
     }
   });
   var bad = 0;   // watchdog: nudge a stalled player, give up after ~3 minutes
@@ -289,6 +303,11 @@ function onYouTubeIframeAPIReady() {
     if (s === 1 || s === 3) { bad = 0; return; }
     player.playVideo();
     if (++bad >= 6) useFallback();
+  }, 30000);
+  setInterval(function () {
+    if (!audioPlayer || !audioPlayer.getPlayerState) return;
+    var s = audioPlayer.getPlayerState();
+    if (s !== 1 && s !== 3) audioPlayer.playVideo();
   }, 30000);
 }
 if (C.background === 'photos') {
