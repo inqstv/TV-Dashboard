@@ -268,6 +268,18 @@ function useFallback() {
   });
 }
 var player, audioPlayer;
+var bgLoopTimer;
+function scheduleBackgroundLoop() {
+  clearTimeout(bgLoopTimer);
+  var duration = player && player.getDuration ? player.getDuration() : 0;
+  if (!duration) return;
+  bgLoopTimer = setTimeout(function () {
+    if (!fallback && player.getPlayerState() === YT.PlayerState.PLAYING) {
+      player.seekTo(0, true);
+      player.playVideo();
+    }
+  }, Math.max(500, (duration - .2) * 1000));
+}
 function onYouTubeIframeAPIReady() {
   player = new YT.Player('bg', {
     videoId: C.video, width: '100%', height: '100%',
@@ -278,7 +290,9 @@ function onYouTubeIframeAPIReady() {
         e.target.playVideo();
       },
       onStateChange: function (e) {
-        if (e.data === YT.PlayerState.ENDED) {
+        if (e.data === YT.PlayerState.PLAYING) {
+          scheduleBackgroundLoop();
+        } else if (e.data === YT.PlayerState.ENDED) {
           e.target.seekTo(0, true);
           e.target.playVideo();
         }
