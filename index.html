@@ -76,7 +76,7 @@ body.night #ui{opacity:.65}
 </head>
 <body>
 <div id="bg"></div>
-<video id="local-bg" muted autoplay playsinline></video>
+<video id="local-bg" autoplay playsinline></video>
 <div id="audio-bg"></div>
 <div class="ph" id="p0"></div><div class="ph" id="p1"></div>
 <div id="dim"></div>
@@ -92,7 +92,8 @@ body.night #ui{opacity:.65}
 var C = {
   video: 'o4qjk8_5gmU',              // YouTube live stream id used for the visual background
   audioVideo: 'rFZHOHl-L8A',         // separate YouTube live stream used for sound
-  background: 'video',               // choose 'video' or 'photos'
+  background: 'video',               // choose 'video', 'local', or 'photos'
+  localVideo: 'background.webm',     // local background file in the repository root
   audio: true,                       // set true to allow background video audio (browser autoplay rules still apply)
   lat: 54.9783, lon: -1.6178,        // weather location (Newcastle upon Tyne)
   tz: 'Europe/London',               // fixed, so the TV's own timezone setting doesn't matter
@@ -341,7 +342,8 @@ function startLocalVideo(info) {
   localBackground = true;
   $('bg').style.display = 'none';
   var video = $('local-bg');
-  video.src = info.src || 'data/background.mp4';
+  video.muted = !C.audio;
+  video.src = info && info.src ? info.src : C.localVideo;
   video.style.display = 'block';
   video.onerror = useFallback;
   video.addEventListener('ended', function () {
@@ -352,6 +354,8 @@ function startLocalVideo(info) {
 }
 if (C.background === 'photos') {
   useFallback();
+} else if (C.background === 'local') {
+  startLocalVideo({ src: C.localVideo });
 } else {
   getData('video.json', function (info) {
     if (info && info.mode === 'local') startLocalVideo(info);
