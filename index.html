@@ -10,12 +10,7 @@
 /* 1rem = 10px at 960x540; everything scales from viewport width, so 720p to 4K look identical */
 html{font-size:calc(100vw/96)}
 body{margin:0;width:100vw;height:100vh;overflow:hidden;background:#0a1620;color:#fff;font-family:Inter,Roboto,"Helvetica Neue",Arial,sans-serif;cursor:none}
-.ph{position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none}
-#bg{position:fixed;left:50%;top:50%;width:177.78vh;min-width:100vw;height:56.25vw;min-height:100vh;transform:translate(-50%,-50%);border:0;pointer-events:none}
-#local-bg{display:none;position:fixed;left:50%;top:50%;width:177.78vh;min-width:100vw;height:56.25vw;min-height:100vh;transform:translate(-50%,-50%);border:0;object-fit:cover;pointer-events:none}
-#audio-bg{position:fixed;left:-1px;top:-1px;width:1px;height:1px;border:0;opacity:0;pointer-events:none}
-.ph{background-size:cover;background-position:center;opacity:0;transition:opacity 3s}
-.ph.on{opacity:1}
+#bg{position:fixed;left:50%;top:50%;width:177.78vh;min-width:100vw;height:56.25vw;min-height:100vh;transform:translate(-50%,-50%);border:0;object-fit:cover;pointer-events:none}
 #dim{position:fixed;left:0;top:0;width:100%;height:100%;background:rgba(5,12,20,.55)}
 #ui{position:fixed;left:9.5rem;right:9.5rem;top:4rem;bottom:2rem}
 #top{display:flex;justify-content:space-between;height:15.6rem}
@@ -75,10 +70,7 @@ body.night #ui{opacity:.65}
 </style>
 </head>
 <body>
-<div id="bg"></div>
-<video id="local-bg" autoplay playsinline></video>
-<div id="audio-bg"></div>
-<div class="ph" id="p0"></div><div class="ph" id="p1"></div>
+<video id="bg" autoplay loop muted playsinline src="background.webm"></video>
 <div id="dim"></div>
 <div id="ui">
   <div id="top">
@@ -90,11 +82,6 @@ body.night #ui{opacity:.65}
 </div>
 <script>
 var C = {
-  video: 'o4qjk8_5gmU',              // YouTube live stream id used for the visual background
-  audioVideo: 'rFZHOHl-L8A',         // separate YouTube live stream used for sound
-  background: 'video',               // choose 'video', 'local', or 'photos'
-  localVideo: 'background.webm',     // local background file in the repository root
-  audio: true,                       // set true to allow background video audio (browser autoplay rules still apply)
   lat: 54.9783, lon: -1.6178,        // weather location (Newcastle upon Tyne)
   tz: 'Europe/London',               // fixed, so the TV's own timezone setting doesn't matter
   days: 4,                           // calendar columns (days that have events)
@@ -246,121 +233,6 @@ function calendar() {
   getData('events.json', function (list) { EV = list; have = true; render(); }, function () {
     if (!have) $('ev').innerHTML = '<p class="msg">Calendar data not found. Run the "Update dashboard data" workflow once.</p>';
   });
-}
-
-/* Background: YouTube live or iCloud photos (data/photos.json), then plain colour */
-var photos = [], pi = 0, slide = 0, slideTimer = null, fallback = false;
-function showPhoto() {
-  if (!photos.length) return;
-  var next = $('p' + (slide ^ 1));
-  next.style.backgroundImage = 'url(' + photos[pi++ % photos.length] + ')';
-  next.className = 'ph on'; $('p' + slide).className = 'ph'; slide ^= 1;
-}
-function useFallback() {
-  if (fallback) return; fallback = true;
-  var f = $('bg'); if (f && f.parentNode) f.parentNode.removeChild(f);
-  getData('photos.json', function (j) {
-    photos = Array.isArray(j.urls) ? j.urls.filter(function (url) { return typeof url === 'string' && url; }).sort(function () { return Math.random() - .5; }) : [];
-    if (!photos.length) {
-      console.error('Photo background is enabled, but data/photos.json contains no photo URLs.');
-      return;
-    }
-    showPhoto(); slideTimer = setInterval(showPhoto, 60000);
-  }, function () {
-    console.error('Photo background is enabled, but data/photos.json could not be loaded.');
-  });
-}
-var player, audioPlayer;
-var bgLoopTimer;
-var localBackground = false;
-function scheduleBackgroundLoop() {
-  clearTimeout(bgLoopTimer);
-  var duration = player && player.getDuration ? player.getDuration() : 0;
-  if (!duration) return;
-  bgLoopTimer = setTimeout(function () {
-    if (!fallback && player.getPlayerState() === YT.PlayerState.PLAYING) {
-      player.seekTo(0, true);
-      player.playVideo();
-    }
-  }, Math.max(500, (duration - .2) * 1000));
-}
-function onYouTubeIframeAPIReady() {
-  if (!localBackground) player = new YT.Player('bg', {
-    videoId: C.video, width: '100%', height: '100%',
-    playerVars: { autoplay: 1, mute: 1, controls: 0, fs: 0, rel: 0, modestbranding: 1, playsinline: 1, iv_load_policy: 3, disablekb: 1, vq: 'hd720' },
-    events: {
-      onReady: function (e) {
-        e.target.mute();
-        e.target.playVideo();
-      },
-      onStateChange: function (e) {
-        if (e.data === YT.PlayerState.PLAYING) {
-          scheduleBackgroundLoop();
-        } else if (e.data === YT.PlayerState.ENDED) {
-          e.target.seekTo(0, true);
-          e.target.playVideo();
-        }
-      },
-      onError: useFallback
-    }
-  });
-  audioPlayer = new YT.Player('audio-bg', {
-    videoId: C.audioVideo, width: '1', height: '1',
-    playerVars: { autoplay: 1, mute: C.audio ? 0 : 1, controls: 0, rel: 0, modestbranding: 1, playsinline: 1, iv_load_policy: 3, disablekb: 1 },
-    events: {
-      onReady: function (e) {
-        e.target.getIframe().setAttribute('allow', 'autoplay; encrypted-media');
-        if (C.audio) {
-          e.target.unMute();
-          e.target.setVolume(100);
-        } else {
-          e.target.mute();
-        }
-        e.target.playVideo();
-      }
-    }
-  });
-  var bad = 0;   // watchdog: nudge a stalled player, give up after ~3 minutes
-  setInterval(function () {
-    if (localBackground || fallback || !player || !player.getPlayerState) return;
-    var s = player.getPlayerState();
-    if (s === 1 || s === 3) { bad = 0; return; }
-    player.playVideo();
-    if (++bad >= 6) useFallback();
-  }, 30000);
-  setInterval(function () {
-    if (!audioPlayer || !audioPlayer.getPlayerState) return;
-    var s = audioPlayer.getPlayerState();
-    if (s !== 1 && s !== 3) audioPlayer.playVideo();
-  }, 30000);
-}
-function startYouTube() {
-  var s = document.createElement('script'); s.src = 'https://www.youtube.com/iframe_api';
-  s.onerror = useFallback; document.head.appendChild(s);
-}
-function startLocalVideo(info) {
-  localBackground = true;
-  $('bg').style.display = 'none';
-  var video = $('local-bg');
-  video.muted = !C.audio;
-  video.src = info && info.src ? info.src : C.localVideo;
-  video.style.display = 'block';
-  video.onerror = useFallback;
-  video.addEventListener('ended', function () {
-    video.currentTime = 0;
-    video.play();
-  });
-  video.play().catch(function () {});
-}
-if (C.background === 'photos') {
-  useFallback();
-} else if (C.background === 'local') {
-  startLocalVideo({ src: C.localVideo });
-} else {
-  getData('video.json', function (info) {
-    if (info && info.mode === 'local') startLocalVideo(info);
-    else startYouTube();
-  }, startYouTube);
 }
 
 weather(); calendar();
