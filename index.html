@@ -11,6 +11,7 @@
 html{font-size:calc(100vw/96)}
 body{margin:0;width:100vw;height:100vh;overflow:hidden;background:#0a1620;color:#fff;font-family:Inter,Roboto,"Helvetica Neue",Arial,sans-serif;cursor:none}
 #bg{position:fixed;left:50%;top:50%;width:177.78vh;min-width:100vw;height:56.25vw;min-height:100vh;transform:translate(-50%,-50%);border:0;object-fit:cover;pointer-events:none}
+#audio-bg{position:fixed;left:-1px;top:-1px;width:1px;height:1px;border:0;opacity:0;pointer-events:none}
 #dim{position:fixed;left:0;top:0;width:100%;height:100%;background:rgba(5,12,20,.55)}
 #ui{position:fixed;left:9.5rem;right:9.5rem;top:4rem;bottom:2rem}
 #top{display:flex;justify-content:space-between;height:15.6rem}
@@ -71,6 +72,7 @@ body.night #ui{opacity:.65}
 </head>
 <body>
 <video id="bg" autoplay loop muted playsinline src="background.webm"></video>
+<div id="audio-bg"></div>
 <div id="dim"></div>
 <div id="ui">
   <div id="top">
@@ -82,6 +84,8 @@ body.night #ui{opacity:.65}
 </div>
 <script>
 var C = {
+  audioVideo: 'rFZHOHl-L8A',         // live stream used for background music
+  audio: true,                       // set false to disable background music
   lat: 54.9783, lon: -1.6178,        // weather location (Newcastle upon Tyne)
   tz: 'Europe/London',               // fixed, so the TV's own timezone setting doesn't matter
   days: 4,                           // calendar columns (days that have events)
@@ -234,6 +238,55 @@ function calendar() {
     if (!have) $('ev').innerHTML = '<p class="msg">Calendar data not found. Run the "Update dashboard data" workflow once.</p>';
   });
 }
+
+var audioPlayer;
+function startAudio() {
+  if (!audioPlayer || !C.audio) return;
+  audioPlayer.unMute();
+  audioPlayer.setVolume(100);
+  audioPlayer.playVideo();
+}
+function onYouTubeIframeAPIReady() {
+  audioPlayer = new YT.Player('audio-bg', {
+    videoId: C.audioVideo,
+    width: '1',
+    height: '1',
+    playerVars: {
+      autoplay: 1,
+      mute: C.audio ? 0 : 1,
+      controls: 0,
+      rel: 0,
+      modestbranding: 1,
+      playsinline: 1,
+      iv_load_policy: 3,
+      disablekb: 1
+    },
+    events: {
+      onReady: function (event) {
+        event.target.getIframe().setAttribute('allow', 'autoplay; encrypted-media');
+        if (C.audio) startAudio();
+        else event.target.mute();
+      },
+      onError: function (event) {
+        console.error('Background music could not be played. YouTube error:', event.data);
+      }
+    }
+  });
+}
+var youtubeApi = document.createElement('script');
+youtubeApi.src = 'https://www.youtube.com/iframe_api';
+youtubeApi.onerror = function () {
+  console.error('Background music could not be played because the YouTube API failed to load.');
+};
+document.head.appendChild(youtubeApi);
+['click', 'keydown', 'pointerdown', 'touchstart'].forEach(function (eventName) {
+  document.addEventListener(eventName, startAudio, { passive: true });
+});
+setInterval(function () {
+  if (!audioPlayer || !audioPlayer.getPlayerState) return;
+  var state = audioPlayer.getPlayerState();
+  if (state !== YT.PlayerState.PLAYING && state !== YT.PlayerState.BUFFERING) startAudio();
+}, 30000);
 
 weather(); calendar();
 setInterval(weather, 30 * 60000);
