@@ -1,6 +1,6 @@
 """Runs inside GitHub Actions. Writes data/events.json (always) and data/photos.json (every ~4h).
 Secrets come from environment variables, never from the repo: CAL_URL (required), ALBUM_URL (optional)."""
-import datetime as dt, json, os, re, time, urllib.request, urllib.error
+import datetime as dt, json, os, re, ssl, time, urllib.request, urllib.error
 from urllib.parse import urlparse
 from zoneinfo import ZoneInfo
 
@@ -20,7 +20,15 @@ NAMES = {"CSC8202": "Information Security and Cryptography", "CSC8204": "High In
 def events():
     import icalendar, recurring_ical_events
     url = os.environ["CAL_URL"].replace("webcal://", "https://", 1)
-    raw = urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=60).read()
+    try:
+        raw = urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=60).read()
+    except urllib.error.URLError as exc:
+        if isinstance(getattr(exc, "reason", None), ssl.SSLCertVerificationError):
+            print(f"events skipped (SSL cert verify failed): {exc.reason}")
+            if not os.path.exists("data/events.json"):
+                json.dump([], open("data/events.json", "w"), separators=(",", ":"))
+            return
+        raise
     cal = icalendar.Calendar.from_ical(raw)
     now = dt.datetime.now(TZ)
     out = []
